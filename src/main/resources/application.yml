@@ -1,0 +1,18 @@
+spring:
+  data:
+    mongodb:
+      host: localhost
+      port: 27017
+      database: admin
+      username: root
+      password: pwd
+
+
+orders:
+  baseUrl: http://localhost:8081
+  path: /orderSearchService/order/phone
+
+products:
+  baseUrl: http://localhost:8082
+  path: /productInfoService/product/names
+  timeout: 5
