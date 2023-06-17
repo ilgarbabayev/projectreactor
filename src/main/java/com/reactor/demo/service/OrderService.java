@@ -31,8 +31,6 @@ public class OrderService {
 
   public Flux<OrderInfo> getOrdersByUserId(String userId, String requestId) {
     var userMongo = userInfoService.getUserById(userId)
-                                   .doOnEach(logOnNext(v -> log.info("getting order for user {}", v)))
-                                   .doOnEach(logOnError(e -> log.error("error when getting user", e)))
                                    .contextWrite(Context.of("requestId", requestId));
 
     return userMongo.flatMapMany(user ->
@@ -47,12 +45,6 @@ public class OrderService {
 
                                            var productMono = productService.getProducts(order.getProductCode())
                                                                            .reduce((p1, p2) -> p1.getScore() > p2.getScore() ? p1 : p2)
-                                                                           .onErrorResume(ex -> {
-                                                                             log.error("Error occurred: ", ex);
-                                                                             return Mono.empty();
-                                                                           })
-                                                                           .doOnEach(logOnNext(v -> log.info("getting product {}", v)))
-                                                                           .doOnEach(logOnError(e -> log.error("error when getting product", e)))
                                                                            .contextWrite(Context.of("requestId", requestId));
 
                                            return productMono
@@ -63,8 +55,6 @@ public class OrderService {
                                                })
                                                .switchIfEmpty(Mono.just(orderInfo));
                                          })
-                                         .doOnEach(logOnNext(v -> log.info("getting order {}", v)))
-                                         .doOnEach(logOnError(e -> log.error("error when getting order", e)))
                                          .contextWrite(Context.of("requestId", requestId))
     );
   }
@@ -80,6 +70,8 @@ public class OrderService {
         .get()
         .uri(uri)
         .retrieve()
-        .bodyToFlux(Order.class);
+        .bodyToFlux(Order.class)
+        .doOnEach(logOnNext(v -> log.info("getting order {}", v)))
+        .doOnEach(logOnError(e -> log.error("error when getting order", e)));
   }
 }

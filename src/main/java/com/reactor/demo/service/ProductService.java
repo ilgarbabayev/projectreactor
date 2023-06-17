@@ -10,6 +10,10 @@ import com.reactor.demo.model.Product;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import static com.reactor.demo.service.LogHelper.logOnError;
+import static com.reactor.demo.service.LogHelper.logOnNext;
 
 @RequiredArgsConstructor
 @Service
@@ -33,6 +37,12 @@ public class ProductService {
         .get()
         .uri(uri)
         .retrieve()
-        .bodyToFlux(Product.class);
+        .bodyToFlux(Product.class)
+        .onErrorResume(ex -> {
+          log.error("Error occurred: ", ex);
+          return Mono.empty();
+        })
+        .doOnEach(logOnNext(v -> log.info("getting product {}", v)))
+        .doOnEach(logOnError(e -> log.error("error when getting product", e)));
   }
 }
